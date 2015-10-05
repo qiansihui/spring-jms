@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+    "
+        >
+
+    <!-- 配置connectionFactory -->
+    <bean id="jmsFactory" class="org.apache.activemq.pool.PooledConnectionFactory"
+          destroy-method="stop">
+        <property name="connectionFactory">
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL">
+                    <value>tcp://127.0.0.1:61616</value>
+                </property>
+                <property name="password" value="admin"/>
+                <property name="userName" value="admin"/>
+            </bean>
+        </property>
+        <property name="maxConnections" value="100"></property>
+    </bean>
+
+    <!-- Spring JMS Template -->
+    <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory" ref="jmsFactory"/>
+        <property name="defaultDestination" ref="logsDestination"/>
+    </bean>
+
+
+    <!-- 发送消息的目的地（一个队列） -->
+    <bean id="logsDestination" class="org.apache.activemq.command.ActiveMQQueue">
+        <!-- 设置消息队列的名字 -->
+        <constructor-arg index="0" value="logs" />
+    </bean>
+
+    <bean id="jmsMessageListener" class="spring.mq.listener.MQListener"/>
+    <bean id = "consumer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="jmsFactory"/>
+        <property name="destination" ref="logsDestination" />
+        <property name="messageListener" ref="jmsMessageListener" />
+    </bean>
+
+    <bean id="MQPublisher" class="spring.mq.listener.MQPublisher">
+        <property name="jmsTemplate" ref="jmsTemplate"></property>
+    </bean>
+</beans>
