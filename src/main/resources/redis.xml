@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+
+       <!--配置jedis-->
+       <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+              <property name="testOnReturn" value="false"/>
+              <property name="maxIdle" value="15"/>
+              <property name="maxTotal" value="20" />
+              <property name="maxWaitMillis" value="1000"/>
+              <property name="minIdle" value="10" />
+              <property name="lifo" value="false"/>
+              <property name="softMinEvictableIdleTimeMillis" value="10"/>
+              <property name="testOnBorrow" value="true"/>
+              <property name="testWhileIdle" value="false"/>
+              <property name="timeBetweenEvictionRunsMillis" value="300000"/>
+              <property name="blockWhenExhausted" value="true"/>
+       </bean>
+       <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+              <constructor-arg index="0" ref="jedisPoolConfig" />
+              <constructor-arg index="1" value="localhost" />
+       </bean>
+    <bean id="jedisPubSub" class="spring.redis.listener.RedisListener"/>
+    <bean id="jedisPublisher" class="spring.redis.publisher.RedisPublisher">
+        <property name="redisManager" ref="redisPublisherManager"/>
+    </bean>
+    <bean id="redisManager" class="spring.redis.listener.RedisManager" init-method="init">
+        <property name="jedisPool" ref="jedisPool"/>
+        <property name="jedisPubSub" ref="jedisPubSub"/>
+    </bean>
+
+    <bean id="redisPublisherManager" class="spring.redis.publisher.RedisManager">
+        <property name="jedisPool" ref="jedisPool"></property>
+    </bean>
+
+
+</beans>
